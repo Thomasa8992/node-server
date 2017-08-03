@@ -11,6 +11,8 @@ http.createServer(function(req, res) {
     var parsedUrl = url.parse(req.url);
     var method = req.method;
     
+    
+
     if (parsedUrl.pathname.indexOf('/chirps/one/') > -1 && req.method === 'Get') {
 
         lastSlashIndex = parsedUrl.pathname.lastIndexOf("/");
