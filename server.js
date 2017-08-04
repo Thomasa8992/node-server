@@ -2,71 +2,19 @@ var http = require('http');
 var url = require('url');
 var fs = require('fs');
 var path = require('path');
-var shortid = require('shortid');
+var ids = require('shortid');
 
 var jsonPath = path.join(__dirname, 'data.json');
 
 console.log('starting server');
 http.createServer(function(req, res) {
+    if (req.url.charAt(req.url.length - 1) === '/') {
+        req.url = req.url.slice(0, req.url.length - 1);
+    }
+
     var parsedUrl = url.parse(req.url);
-    var method = req.method;
-    
-    
 
-    if (parsedUrl.pathname.indexOf('/chirps/one/') > -1 && req.method === 'Get') {
-
-        lastSlashIndex = parsedUrl.pathname.lastIndexOf("/");
-        var id = parsedUrl.pathname.slice(lastSlashIndex + 1);
-        console.log(id);
-
-        fs.readFile(jsonPath, 'utf-8', function(err, file) {
-        if (err) {
-            res.writeHead(500);
-            res.end('Could not read file');
-        }
-
-        var arr = JSON.parse(file);
-
-        var result;
-
-        arr.forEach(function(a){
-            if(a.id === id){
-                result = a
-            }
-        });
-
-        if(result === "undefined"){
-            res.writeHead(404, "Not Found");
-            res.end();
-        } else {
-            res.writeHead(200, "ok");
-            res.end(JSON.stringify(result));
-        }
-
-
-
-        // for (var i = 0; i < arr.length; i++){
-        //     var id = arr[i].id;
-        //     // console.log(id);
-        // if('/chirps/one/' + id){
-        //     // arr.splice(arr[i], id)
-        //     console.log(parsedUrl.pathname + id);
-        // }
-        // }
-        // fs.writeFile(jsonPath, JSON.stringify(arr), function(err, success) {
-        //     if (err) {
-        //         res.writeHead(500);
-        //         res.end('Couldn\'t successfull store data');
-        //     } else {
-        //         res.writeHead(201, 'Created');
-        //         res.end(JSON.stringify(arr));
-        //     }
-        // });
-        });
-    
-      
-   }else if (parsedUrl.pathname === '/chirps' && req.method === 'GET') {
- 
+    if (parsedUrl.pathname === '/chirps' && req.method === 'GET') {
         fs.readFile(jsonPath, function(err, file) {
             if (err) {
                 res.writeHead(500);
@@ -98,10 +46,10 @@ http.createServer(function(req, res) {
 
             var arr = JSON.parse(file);
 
-            data.id = shortid.generate();
-          
+            data.id = ids.generate();
+
             arr.push(data);
-            // console.log(arr[0].id);
+
             fs.writeFile(jsonPath, JSON.stringify(arr), function(err, success) {
                 if (err) {
                     res.writeHead(500);
@@ -111,7 +59,95 @@ http.createServer(function(req, res) {
                     res.end(JSON.stringify(arr));
                 }
             });
-        });  
+        });
+    } else if (req.method === 'GET' && parsedUrl.pathname.indexOf('/chirps/one/') > -1) {
+        var lastSlashIndex = parsedUrl.pathname.lastIndexOf('/');
+        var id = parsedUrl.pathname.slice(lastSlashIndex + 1);
+
+        fs.readFile(jsonPath, 'utf-8', function(err, file) {
+            if (err) {
+                res.writeHead(500);
+                res.end('Could not read file');
+            }
+
+            var arr = JSON.parse(file);
+
+            var result;
+
+            arr.forEach(function(a) {
+                if (a.id === id) {
+                    result = a;
+                }
+            });
+
+            if (result === undefined) {
+                res.writeHead(404, 'NOT FOUND');
+                res.end();
+            } else {
+                res.writeHead(200, 'OK');
+                res.end(JSON.stringify(result));
+            }
+        });
+    } else if (req.method === 'DELETE' && parsedUrl.pathname.indexOf('/chirps/one/') > -1) {
+        var lastSlashIndex = parsedUrl.pathname.lastIndexOf('/');
+        var id = parsedUrl.pathname.slice(lastSlashIndex + 1);
+
+        fs.readFile(jsonPath, 'utf-8', function(err, file) {
+            if (err) {
+                res.writeHead(500);
+                res.end('Could not read file');
+            }
+
+            var arr = JSON.parse(file);
+
+            var deleteIndex = -1;
+            
+            arr.forEach(function(a, i) {
+                if (a.id === id) {
+                    deleteIndex = i;
+                }
+            });
+            if (deleteIndex != -1) {
+                    arr.splice(deleteIndex, 1);
+            }
+            fs.writeFile(jsonPath, JSON.stringify(arr), function(err, success) {
+                if (err) {
+                    res.writeHead(500);
+                    res.end('Couldn\'t successfull store data');
+                } else {
+                    res.writeHead(201, 'Created');
+                    res.end(JSON.stringify(arr));
+                }
+            });
+        });
+    } else if (req.method === 'PUT' && parsedUrl.pathname.indexOf('/chirps/one/') > -1) {
+        var lastSlashIndex = parsedUrl.pathname.lastIndexOf('/');
+        var id = parsedUrl.pathname.slice(lastSlashIndex + 1);
+
+        fs.readFile(jsonPath, 'utf-8', function(err, file) {
+            if (err) {
+                res.writeHead(500);
+                res.end('Could not read file');
+            }
+
+            var arr = JSON.parse(file);
+
+            var result;
+
+            arr.forEach(function(a) {
+                if (a.id === id) {
+                    result = a;
+                }
+            });
+
+            if (result === undefined) {
+                res.writeHead(404, 'NOT FOUND');
+                res.end();
+            } else {
+                res.writeHead(200, 'OK');
+                res.end(JSON.stringify(result));
+            }
+        });
     }
 })
 .listen(3000);
